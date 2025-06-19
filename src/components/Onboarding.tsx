@@ -1,13 +1,42 @@
+// src/components/Onboarding.tsx (Modified)
 
+import React, { useEffect } from 'react'; // No need for useState/useEffect for auth logic here anymore
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, User, Heart } from "lucide-react";
+import { useAuth } from '@/hooks/useAuth'; // To check if user is authenticated
+import { useNavigate } from 'react-router-dom'; // For redirection
 
 interface OnboardingProps {
+  // This prop is now called when a role is selected by an AUTHENTICATED user.
   onComplete: (userType: "patient" | "caretaker") => void;
 }
 
 const Onboarding = ({ onComplete }: OnboardingProps) => {
+  const { user, loading: authHookLoading } = useAuth();
+  const navigate = useNavigate();
+
+  // Protect this component: Redirect if user is not authenticated or already has a role
+  useEffect(() => {
+    if (!authHookLoading && !user) {
+      // If not loading and no user, they should be on the auth form
+      navigate('/'); // Redirect to the main authentication route
+    }
+    // TODO: Later, check if user already has a role in their profile.
+    // If (user && userHasRoleInProfile) navigate to dashboard;
+  }, [user, authHookLoading, navigate]);
+
+  if (authHookLoading || !user) {
+    // Show a loading or redirecting message while auth state is determined
+    // or if not authenticated, prevent rendering this component's content directly.
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center">
+        <div className="text-xl text-foreground">Loading user state...</div>
+      </div>
+    );
+  }
+
+  // If user is authenticated, proceed to role selection
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center p-6">
       <div className="max-w-4xl w-full">
@@ -24,7 +53,11 @@ const Onboarding = ({ onComplete }: OnboardingProps) => {
         </div>
 
         <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-          <Card className="group hover:shadow-xl transition-all duration-300 border-2 hover:border-blue-200 cursor-pointer">
+          <Card
+            className="group hover:shadow-xl transition-all duration-300 border-2 hover:border-blue-200 cursor-pointer"
+            // Use onComplete directly, it will be handled by App.tsx
+            onClick={() => onComplete("patient")}
+          >
             <CardHeader className="text-center pb-4">
               <div className="w-16 h-16 bg-blue-100 rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-blue-200 transition-colors">
                 <User className="w-8 h-8 text-blue-600" />
@@ -53,7 +86,7 @@ const Onboarding = ({ onComplete }: OnboardingProps) => {
                   Large, easy-to-use interface
                 </li>
               </ul>
-              <Button 
+              <Button
                 className="w-full mt-6 bg-blue-600 hover:bg-blue-700 text-white py-3 text-lg"
                 onClick={() => onComplete("patient")}
               >
@@ -62,7 +95,11 @@ const Onboarding = ({ onComplete }: OnboardingProps) => {
             </CardContent>
           </Card>
 
-          <Card className="group hover:shadow-xl transition-all duration-300 border-2 hover:border-green-200 cursor-pointer">
+          <Card
+            className="group hover:shadow-xl transition-all duration-300 border-2 hover:border-green-200 cursor-pointer"
+            // Use onComplete directly, it will be handled by App.tsx
+            onClick={() => onComplete("caretaker")}
+          >
             <CardHeader className="text-center pb-4">
               <div className="w-16 h-16 bg-green-100 rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-green-200 transition-colors">
                 <Users className="w-8 h-8 text-green-600" />
@@ -91,7 +128,7 @@ const Onboarding = ({ onComplete }: OnboardingProps) => {
                   Receive email alerts
                 </li>
               </ul>
-              <Button 
+              <Button
                 className="w-full mt-6 bg-green-600 hover:bg-green-700 text-white py-3 text-lg"
                 onClick={() => onComplete("caretaker")}
               >
